@@ -1,6 +1,7 @@
 package com.springboot.member.entity;
 
 import com.springboot.audit.BaseEntity;
+import com.springboot.question.entity.Question;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -30,6 +31,9 @@ public class Member extends BaseEntity {
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
     private Status status = Status.MEMBER_ACTIVE;
+
+    @OneToMany(mappedBy = "member")
+    private List<Question> questions = new ArrayList<>();
 
     public enum Status {
         MEMBER_ACTIVE,
