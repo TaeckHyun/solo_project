@@ -23,6 +23,12 @@ public class Member extends BaseEntity {
     private String email;
 
     @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String phone;
+
+    @Column(nullable = false)
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -32,8 +38,17 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private Status status = Status.MEMBER_ACTIVE;
 
+    // Member와 Question은 1 : N 관계
     @OneToMany(mappedBy = "member")
     private List<Question> questions = new ArrayList<>();
+
+    // 동기화, 영속성 전이
+    public void setQuestion(Question question) {
+        questions.add(question);
+        if (question.getMember() != this) {
+            question.setMember(this);
+        }
+    }
 
     public enum Status {
         MEMBER_ACTIVE,

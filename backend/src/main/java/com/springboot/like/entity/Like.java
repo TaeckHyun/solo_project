@@ -12,6 +12,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @Entity
+@Table(name = "LIKES")
 public class Like {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,4 +25,5 @@ public class Like {
     @ManyToOne
     @JoinColumn(name = "QUESTION_ID")
     private Question question;
+
 }
