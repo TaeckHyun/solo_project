@@ -17,12 +17,12 @@ public class QuestionService {
     }
 
     // 특정 질문 조회 서비스 로직 구현
-    public Question getQuestion(long questionId) {
+    public Question findQuestion(long questionId) {
         return null;
     }
 
     // 전체 질문 조회 서비스 로직 구현
-    public Page<Question> getQuestions(int page, int size) {
+    public Page<Question> findQuestions(int page, int size) {
         return null;
     }
 
