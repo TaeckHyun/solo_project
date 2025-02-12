@@ -38,7 +38,7 @@ public class Question {
 
     // Answer와 Question은 1 : 1 관계
     // 질문이 사라지면 답변도 같이 사라짐
-    @OneToOne(mappedBy = "question", cascade = CascadeType.REMOVE)
+    @OneToOne(mappedBy = "question", cascade = CascadeType.PERSIST)
     private Answer answer;
 
     @Column(nullable = false)
@@ -52,6 +52,7 @@ public class Question {
         }
     }
 
+    // 동기화, 영속성 전이
     public void setMember(Member member) {
         this.member = member;
         if (!member.getQuestions().contains(this)) {
@@ -59,9 +60,7 @@ public class Question {
         }
     }
 
-    public void addCount() {
-        this.likeCount = likeCount + 1;
-    }
+    // Question 엔티티 단에서 likeCount 증가 감소 메서드 만들어도될듯
 
     public enum QuestionStatus {
         QUESTION_REGISTERED("질문 등록"),
