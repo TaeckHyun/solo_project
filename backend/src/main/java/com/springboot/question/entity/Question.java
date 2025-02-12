@@ -25,7 +25,7 @@ public class Question {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status = Status.QUESTION_REGISTERED;
+    private QuestionStatus status = QuestionStatus.QUESTION_REGISTERED;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,7 +42,7 @@ public class Question {
     private Answer answer;
 
     @Column(nullable = false)
-    private Long likeCount;
+    private int likeCount = 0;
 
     // 동기화, 영속성 전이
     public void setAnswer(Answer answer) {
@@ -63,15 +63,29 @@ public class Question {
         this.likeCount = likeCount + 1;
     }
 
-    public enum Status {
-        QUESTION_REGISTERED,
-        QUESTION_ANSWERED,
-        QUESTION_DELETED,
-        QUESTION_DEACTIVED
+    public enum QuestionStatus {
+        QUESTION_REGISTERED("질문 등록"),
+        QUESTION_ANSWERED("질문 답변 완료"),
+        QUESTION_DELETED("질문 삭제"),
+        QUESTION_DEACTIVED("질문 비활성화 상태");
+
+        @Getter
+        private String status;
+
+        QuestionStatus(String status) {
+            this.status = status;
+        }
     }
 
     public enum Visibility {
-        QUESTION_PUBLIC,
-        QUESTION_SECRET
+        QUESTION_PUBLIC("공개글"),
+        QUESTION_SECRET("비밀글");
+
+        @Getter
+        private String status;
+
+        Visibility(String status) {
+            this.status = status;
+        }
     }
 }
