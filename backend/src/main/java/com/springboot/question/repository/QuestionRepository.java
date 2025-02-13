@@ -6,7 +6,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
+
 public interface QuestionRepository extends JpaRepository<Question, Long> {
-    @Query("SELECT q FROM Question q WHERE q.status <> 'QUESTION_DELETE'")
-    Page<Question> findPublicQuestion(Pageable pageable);
+    Page<Question> findByQuestionStatusNotIn(List<Question.QuestionStatus> statuses,
+                                             Pageable pageable);
 }

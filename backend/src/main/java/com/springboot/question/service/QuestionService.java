@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 @Service
@@ -61,9 +62,11 @@ public class QuestionService {
     }
 
     // 특정 질문 조회 서비스 로직 구현
+    // 인증
     public Question findQuestion(long questionId) {
         // Authentication을 통해서 Controller에서 인증을 받고 여기로 넘겨줘야함
         // 그러고 권한 없으면 예외처리 던져야됨
+
         Question question = findVerifiedQuestion(questionId);
 
         return findVerifiedQuestion(questionId);
@@ -74,7 +77,10 @@ public class QuestionService {
         Pageable pageable = PageRequest.of(page-1, size,
                 Sort.by("questionId").descending());
 
-        return questionRepository.findPublicQuestion(pageable);
+        return questionRepository.findByQuestionStatusNotIn(Arrays.asList(
+                Question.QuestionStatus.QUESTION_DELETED,
+                Question.QuestionStatus.QUESTION_DEACTIVED
+        ), PageRequest.of(page,size, Sort.by("questionId").descending()));
         // 비밀글인 상태 SECRET 이여도 가져오긴해야됨 보이긴해야지, 비밀글입니다 로 보여야지
     }
 
@@ -97,5 +103,17 @@ public class QuestionService {
         if(question.getStatus() == Question.QuestionStatus.QUESTION_DELETED) {
             throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND);
         }
+    }
+
+    // 좋아요 숫자가 증가하는 메서드 필요
+    public void addLikeCount(Question question) {
+        question.setLikeCount(question.getLikeCount() + 1);
+        questionRepository.save(question);
+    }
+
+    // 좋아요 숫자가 감소하는 메서드 필요
+    public void removeLikeCount(Question question) {
+        question.setLikeCount(question.getLikeCount() - 1);
+        questionRepository.save(question);
     }
 }
