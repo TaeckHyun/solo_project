@@ -2,6 +2,8 @@ package com.springboot.auth.filter;
 
 import com.springboot.auth.jwt.JwtTokenizer;
 import com.springboot.auth.utils.AuthorityUtils;
+import com.springboot.auth.utils.IdAndEmailPrincipal;
+import com.springboot.auth.utils.MemberDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,11 +32,13 @@ import java.util.Map;
 public class JwtVerificationFilter extends OncePerRequestFilter {
     private final JwtTokenizer jwtTokenizer;
     private final AuthorityUtils authorityUtils;
+    private final MemberDetailsService memberDetailsService;
 
     public JwtVerificationFilter(JwtTokenizer jwtTokenizer,
-                                 AuthorityUtils authorityUtils) {
+                                 AuthorityUtils authorityUtils, MemberDetailsService memberDetailsService) {
         this.jwtTokenizer = jwtTokenizer;
         this.authorityUtils = authorityUtils;
+        this.memberDetailsService = memberDetailsService;
     }
 
     @Override
@@ -113,8 +117,12 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
         // "roles"는 보통 ["ROLE_USER", "ROLE_ADMIN"] 같은 리스트 형태
         List<GrantedAuthority> authorities = authorityUtils.createAuthorities((List)claims.get("roles"));
 
+        MemberDetailsService.MemberDetails memberDetails = (MemberDetailsService.MemberDetails) memberDetailsService.loadUserByUsername(username);
+
+        IdAndEmailPrincipal idAndEmailPrincipal = new IdAndEmailPrincipal(username, memberDetails.getMemberId());
+
         // 인증(Authentication) 객체 생성 (비밀번호는 필요 없으므로 null 처리)
-        Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(idAndEmailPrincipal, null, authorities);
 
         // 현재 스레드의 SecurityContext에 인증 객체를 저장하여, 이후 요청에서도 인증된 사용자로 인식되게 함
         SecurityContextHolder.getContext().setAuthentication(authentication);
