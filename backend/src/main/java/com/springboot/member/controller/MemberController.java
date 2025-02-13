@@ -1,6 +1,6 @@
 package com.springboot.member.controller;
 
-import com.springboot.auth.utils.MemberDetails;
+import com.springboot.auth.utils.IdAndEmailPrincipal;
 import com.springboot.auth.utils.MemberDetailsService;
 import com.springboot.dto.MultiResponseDto;
 import com.springboot.dto.SingleResponseDto;
@@ -52,10 +52,10 @@ public class MemberController {
     @PatchMapping("/{member-id}")
     public ResponseEntity patchMember(@PathVariable("member-id") @Positive long memberId,
                                       @RequestBody @Valid MemberPatchDto memberPatchDto,
-                                      @AuthenticationPrincipal MemberDetails memberDetails) {
+                                      @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
         memberPatchDto.setMemberId(memberId);
 
-        long loggedInMemberId = memberDetails.getMemberId();
+        long loggedInMemberId = idAndEmailPrincipal.getMemberId();
 
         if (loggedInMemberId != memberId) {
             throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_OWNER);
@@ -71,7 +71,9 @@ public class MemberController {
     }
 
     @GetMapping("/{member-id}")
-    public ResponseEntity getMember(@PathVariable("member-id") @Positive long memberId) {
+    public ResponseEntity getMember(@PathVariable("member-id") @Positive long memberId,
+                                    @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
+
         Member member = memberService.findMember(memberId);
 
         return new ResponseEntity(
