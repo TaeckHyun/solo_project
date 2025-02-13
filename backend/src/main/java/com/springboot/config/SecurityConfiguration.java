@@ -104,6 +104,33 @@ public class SecurityConfiguration {
                         // 회원 탈퇴는 ROLE_USER 권한을 가진 사용자만 접근 가능
                         .antMatchers(HttpMethod.DELETE, "/*/members/**").hasRole("USER")
 
+                        // 질문 생성 권한 설정
+                        .antMatchers(HttpMethod.POST, "/*/questions").hasRole("USER")
+                        // 질문 수정 권한 설정
+                        .antMatchers(HttpMethod.PATCH, "/*/questions/**").hasRole("USER")
+                        // 전체 질문 조회 권한 설정
+                        .antMatchers(HttpMethod.GET, "/*/questions").hasAnyRole("USER", "ADMIN")
+                        // 특정 질문 조회 권한 설정
+                        .antMatchers(HttpMethod.GET, "/*/questions/**").hasAnyRole("USER", "ADMIN")
+                        // 질문 삭제 권한 설정
+                        .antMatchers(HttpMethod.DELETE, "/*/questions/**").hasRole("USER")
+
+                        // 답변 생성 권한 설정
+                        .antMatchers(HttpMethod.POST, "/*/answers").hasRole("ADMIN")
+                        // 답변 수정 권한 설정
+                        .antMatchers(HttpMethod.PATCH, "/*/answers/**").hasRole("ADMIN")
+                        // 답변 질문 조회 권한 설정
+                        .antMatchers(HttpMethod.GET, "/*/answers").hasAnyRole("USER", "ADMIN")
+                        // 특정 답변 조회 권한 설정
+                        .antMatchers(HttpMethod.GET, "/*/answers/**").hasAnyRole("USER", "ADMIN")
+                        // 답변 삭제 권한 설정
+                        .antMatchers(HttpMethod.DELETE, "/*/answers/**").hasRole("ADMIN")
+
+                        // 좋아요 생성 권한 설정
+                        .antMatchers(HttpMethod.POST, "/*/likes").hasAnyRole("USER", "ADMIN")
+                        // 좋아요 삭제 권한 설정
+                        .antMatchers(HttpMethod.DELETE, "/*/likes").hasAnyRole("USER", "ADMIN")
+
                         // 위에서 설정한 특정 패턴을 제외한 모든 요청 누구나 접근 가능
                         .anyRequest().permitAll()
                 );
