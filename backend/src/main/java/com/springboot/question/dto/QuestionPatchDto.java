@@ -1,7 +1,7 @@
 package com.springboot.question.dto;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
 
@@ -14,4 +14,8 @@ public class QuestionPatchDto {
 
     @NotBlank
     private String content;
+
+    public void setQuestionId(long questionId) {
+        this.questionId = questionId;
+    }
 }

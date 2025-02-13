@@ -44,6 +44,9 @@ public class Question {
     @Column(nullable = false)
     private int likeCount = 0;
 
+    @Column(nullable = false)
+    private int viewCount = 0;
+
     // 동기화, 영속성 전이
     public void setAnswer(Answer answer) {
         this.answer = answer;

@@ -1,5 +1,6 @@
 package com.springboot.question.dto;
 
+import com.springboot.answer.dto.AnswerResponseDto;
 import com.springboot.question.entity.Question;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,4 +15,7 @@ public class QuestionResponseDto {
     private Question.QuestionStatus questionStatus;
     private Question.Visibility visibility;
     private int likeCount;
+    private int viewCount;
+    private String name;
+    private AnswerResponseDto answerResponseDto;
 }

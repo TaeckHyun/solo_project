@@ -74,9 +74,6 @@ public class QuestionService {
 
     // 전체 질문 조회 서비스 로직 구현
     public Page<Question> findQuestions(int page, int size) {
-        Pageable pageable = PageRequest.of(page-1, size,
-                Sort.by("questionId").descending());
-
         return questionRepository.findByQuestionStatusNotIn(Arrays.asList(
                 Question.QuestionStatus.QUESTION_DELETED,
                 Question.QuestionStatus.QUESTION_DEACTIVED
