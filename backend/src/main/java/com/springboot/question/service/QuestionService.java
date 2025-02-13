@@ -47,7 +47,7 @@ public class QuestionService {
         }
 
         // 답변이 이미 달려서 질문 답변 완료 상태인데 이걸 수정할 수는 없음
-        if(findquestion.getStatus() == Question.QuestionStatus.QUESTION_ANSWERED) {
+        if(findquestion.getQuestionStatus() == Question.QuestionStatus.QUESTION_ANSWERED) {
             throw new BusinessLogicException(ExceptionCode.QUESTION_ALREADY_ANSWERED);
         }
 
@@ -87,7 +87,7 @@ public class QuestionService {
     // 질문 삭제 서비스 로직 구현
     public void deleteQuestion(long questionId) {
         Question question = findVerifiedQuestion(questionId);
-        question.setStatus(Question.QuestionStatus.QUESTION_DELETED);
+        question.setQuestionStatus(Question.QuestionStatus.QUESTION_DELETED);
 
         questionRepository.save(question);
     }
@@ -100,7 +100,7 @@ public class QuestionService {
 
     // 질문이 삭제 상태인지를 검증하는 메서드 필요
     public void verifyQuestionDeleteStatus(Question question) {
-        if(question.getStatus() == Question.QuestionStatus.QUESTION_DELETED) {
+        if(question.getQuestionStatus() == Question.QuestionStatus.QUESTION_DELETED) {
             throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND);
         }
     }

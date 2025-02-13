@@ -25,7 +25,7 @@ public class Question {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private QuestionStatus status = QuestionStatus.QUESTION_REGISTERED;
+    private QuestionStatus questionStatus = QuestionStatus.QUESTION_REGISTERED;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
