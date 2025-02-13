@@ -8,6 +8,7 @@ import com.springboot.auth.handler.MemberAuthenticationFailureHandler;
 import com.springboot.auth.handler.MemberAuthenticationSuccessHandler;
 import com.springboot.auth.jwt.JwtTokenizer;
 import com.springboot.auth.utils.AuthorityUtils;
+import com.springboot.auth.utils.MemberDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -29,10 +30,12 @@ import java.util.Arrays;
 public class SecurityConfiguration {
     private final JwtTokenizer jwtTokenizer;
     private final AuthorityUtils authorityUtils;
+    private final MemberDetailsService memberDetailsService;
 
-    public SecurityConfiguration(JwtTokenizer jwtTokenizer, AuthorityUtils authorityUtils) {
+    public SecurityConfiguration(JwtTokenizer jwtTokenizer, AuthorityUtils authorityUtils, MemberDetailsService memberDetailsService) {
         this.jwtTokenizer = jwtTokenizer;
         this.authorityUtils = authorityUtils;
+        this.memberDetailsService = memberDetailsService;
     }
 
     @Bean
@@ -222,7 +225,7 @@ public class SecurityConfiguration {
 
             // JWT 토큰을 검증하는 필터를 생성
             // 유효한 사용자라면 SecurityContext에 인증 정보를 저장하는 역할을 함
-            JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenizer, authorityUtils);
+            JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenizer, authorityUtils, memberDetailsService);
 
             // HttpSecurity 필터 체인에 jwtAuthenticationFilter 를 추가
             // 로그인 요청이 들어오면 이 필터가 실행되도록 설정
