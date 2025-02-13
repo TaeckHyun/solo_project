@@ -1,12 +1,17 @@
 package com.springboot.member.service;
 
+import com.springboot.auth.utils.AuthorityUtils;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
+import com.springboot.helper.event.MemberRegistrationApplicationEvent;
 import com.springboot.member.entity.Member;
 import com.springboot.member.repository.MemberRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,21 +20,51 @@ import java.util.Optional;
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
+    // Spring 이벤트를 발생시키는 역할
+    // 특정 동작(Ex. 유저 생성)이 발생했을 때, 이를 다른 컴포넌트에 비동기적으로 알릴 수 있음
+    private final ApplicationEventPublisher publisher;
+    // 비밀번호를 해시로 변환하여 안전하게 저장하기 위해 사용
+    // 평문을 그대로 저장하면 안되기 때문에 인코딩 하기 위해 불러온거임
+    private final PasswordEncoder passwordEncoder;
+    private final AuthorityUtils authorityUtils;
 
-    public MemberService(MemberRepository memberRepository) {
+    public MemberService(MemberRepository memberRepository,
+                         ApplicationEventPublisher publisher,
+                         PasswordEncoder passwordEncoder,
+                         AuthorityUtils authorityUtils) {
         this.memberRepository = memberRepository;
+        this.publisher = publisher;
+        this.passwordEncoder = passwordEncoder;
+        this.authorityUtils = authorityUtils;
     }
 
     // 회원 생성 서비스 로직 구현
     public Member createMember(Member member) {
+        // 아이디가 이미 만들어진 상태인지 검증
         verifyExistsEmail(member.getEmail());
 
-        return memberRepository.save(member);
+        // 전달받은 member 객체에 비밀번호를 가져와서 인코딩 후 할당
+        String encryptedPassword = passwordEncoder.encode(member.getPassword());
+
+        // 인코딩 된 비밀번호를 member의 비밀번호로 저장
+        member.setPassword(encryptedPassword);
+
+        // 사용자 이메일에 따라서 권한 지정 후 부여
+        List<String> roles = authorityUtils.createRoles(member.getEmail());
+        member.setRoles(roles);
+
+        Member saveMember = memberRepository.save(member);
+
+        publisher.publishEvent(new MemberRegistrationApplicationEvent(this, saveMember));
+
+        return saveMember;
     }
 
     // 회원 정보 수정 서비스 로직 구현
-    public Member updateMember(Member member) {
+    public Member updateMember(Member member, long currentMemberId) {
         Member findMember = findVerifiedMember(member.getMemberId());
+
+        // 지금 로그인한 회원의 이메일이랑 수정하려고 하는 회원의 이메일이 일치 하는지 확인하는 메서드 필요
 
         Optional.ofNullable(member.getName())
                 .ifPresent(name -> findMember.setName(name));
