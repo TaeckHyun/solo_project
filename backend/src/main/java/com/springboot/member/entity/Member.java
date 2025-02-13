@@ -51,8 +51,15 @@ public class Member extends BaseEntity {
     }
 
     public enum Status {
-        MEMBER_ACTIVE,
-        MEMBER_SLEEP,
-        MEMBER_QUIT
+        MEMBER_ACTIVE("활동 상태"),
+        MEMBER_SLEEP("휴면 상태"),
+        MEMBER_QUIT("탈퇴 상태");
+
+        @Getter
+        private String status;
+
+        Status(String status) {
+            this.status = status;
+        }
     }
 }
