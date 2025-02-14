@@ -26,7 +26,7 @@ public class CheckValidator {
         );
     }
 
-    // find 에서 쓸 권리자 이거나 작성자 인지 검증하는 메서드
+    // 권리자 이거나 작성자 인지 검증하는 메서드
     public void checkAdminAndCheckOwner(long ownerId, long principalOwnerId) {
         if (!checkOwner(ownerId, principalOwnerId) && !checkAdmin()) {
             throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
