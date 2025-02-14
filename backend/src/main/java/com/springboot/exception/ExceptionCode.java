@@ -10,7 +10,8 @@ public enum ExceptionCode {
     QUESTION_NOT_OWNER(403, "해당 질문의 작성자만 수정할 수 있습니다"),
     QUESTION_ALREADY_ANSWERED(400, "답변 완료된 질문은 수정할 수 없습니다"),
     LIKE_NOT_FOUND(404, "좋아요를 찾을 수 없습니다."),
-    ALREADY_LIKE(409, "이미 좋아요를 눌렀음");
+    ALREADY_LIKE(409, "이미 좋아요를 눌렀음"),
+    UNAUTHORIZED_ACCESS(403, "관리자 권한이 없습니다.");
 //    COFFEE_NOT_FOUND(404, "Coffee not found"),
 //    COFFEE_CODE_EXISTS(409, "Coffee Code exists"),
 //    ORDER_NOT_FOUND(404, "Order not found"),
@@ -24,8 +25,8 @@ public enum ExceptionCode {
     @Getter
     private String message;
 
-    ExceptionCode(int code, String message) {
-        this.status = code;
+    ExceptionCode(int status, String message) {
+        this.status = status;
         this.message = message;
     }
 }

@@ -77,9 +77,10 @@ public class MemberController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity getMembers(@RequestParam int page,
                                      @RequestParam int size) {
-        Page<Member> pageMembers = memberService.findMembers(page - 1, size);
+        Page<Member> pageMembers = memberService.findMembers(page, size);
         List<Member> members = pageMembers.getContent();
         return new ResponseEntity(
                 new MultiResponseDto<>(memberMapper.membersToMemberResponseDtos(members),
