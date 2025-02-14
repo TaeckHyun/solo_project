@@ -1,5 +1,6 @@
 package com.springboot.helper.event;
 
+import com.springboot.auth.utils.IdAndEmailPrincipal;
 import com.springboot.helper.email.EmailSender;
 import com.springboot.member.entity.Member;
 import com.springboot.member.service.MemberService;
@@ -9,6 +10,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.mail.MailSendException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @EnableAsync
@@ -34,8 +37,14 @@ public class MemberRegistrationEventListener {
         } catch (MailSendException e) {
             e.printStackTrace();
             log.error("MailSendException: rollback for Member Registration:");
-            Member member = event.getMember();
-            memberService.deleteMember(member.getMemberId());
+            // 🔹 2. 현재 로그인한 사용자의 Principal 정보 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof IdAndEmailPrincipal) {
+                IdAndEmailPrincipal principal = (IdAndEmailPrincipal) authentication.getPrincipal();
+                long principalId = principal.getMemberId(); // 🔥 인증된 사용자 ID 가져오기
+                Member member = event.getMember();
+                memberService.deleteMember(member.getMemberId(), principalId);
+            }
         }
     }
 }
