@@ -50,6 +50,14 @@ public class Member extends BaseEntity {
         }
     }
 
+    public void StatusChange() {
+        this.status = Status.MEMBER_QUIT;
+        // 회원이 작성한 모든 질문을 비활성화
+        for (Question question : this.questions) {
+            question.setQuestionStatus(Question.QuestionStatus.QUESTION_DEACTIVED);
+        }
+    }
+
     public enum Status {
         MEMBER_ACTIVE("활동 상태"),
         MEMBER_SLEEP("휴면 상태"),
