@@ -78,6 +78,10 @@ public class MemberService {
         Optional.ofNullable(member.getPhone())
                 .ifPresent(phone -> findMember.setPhone(phone));
 
+        if (member.getRoles() != null && !member.getRoles().isEmpty()) {
+            findMember.setRoles(member.getRoles());
+        }
+
         return memberRepository.save(findMember);
     }
 
