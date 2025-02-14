@@ -34,16 +34,6 @@ public class AuthorityUtils {
     // 사용자의 역할을 문자열 형태로 저장한 리스트
     private final List<String> USER_ROLES_STRING = List.of("USER");
 
-    // 이메일 주소를 입력받아서 그에 해당하는 List<GrantedAuthority> (즉, 권한 목록) 반환하는 메서드
-    public List<GrantedAuthority> createAuthorities(String email) {
-        // 입력받은 이메일과 @Value로 주입된 adminMailAddress를 비교
-        // 만약 두 이메일이 같다면 관리자 권한 return
-        if (email.equals(adminMailAddress)) {
-            return ADMIN_ROLES;
-        } // 아닐 경우 전부 일반 사용자 권한 return
-        return USER_ROLES;
-    }
-
     // 문자열 형태의 역할 리스트(ex. ["ADMIN, USER"], "USER")를 GrantedAuthority 객체 리스트로 변환하는 메서드
     public List<GrantedAuthority> createAuthorities(List<String> roles) {
         List<GrantedAuthority> authorities = roles.stream()
