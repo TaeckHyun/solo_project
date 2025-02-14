@@ -6,11 +6,11 @@ import com.springboot.exception.ExceptionCode;
 import com.springboot.helper.event.MemberRegistrationApplicationEvent;
 import com.springboot.member.entity.Member;
 import com.springboot.member.repository.MemberRepository;
+import com.springboot.utils.CheckValidator;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,15 +27,18 @@ public class MemberService {
     // 평문을 그대로 저장하면 안되기 때문에 인코딩 하기 위해 불러온거임
     private final PasswordEncoder passwordEncoder;
     private final AuthorityUtils authorityUtils;
+    private final CheckValidator checkValidator;
 
     public MemberService(MemberRepository memberRepository,
                          ApplicationEventPublisher publisher,
                          PasswordEncoder passwordEncoder,
-                         AuthorityUtils authorityUtils) {
+                         AuthorityUtils authorityUtils,
+                         CheckValidator checkValidator) {
         this.memberRepository = memberRepository;
         this.publisher = publisher;
         this.passwordEncoder = passwordEncoder;
         this.authorityUtils = authorityUtils;
+        this.checkValidator = checkValidator;
     }
 
     // 회원 생성 서비스 로직 구현
@@ -61,10 +64,12 @@ public class MemberService {
     }
 
     // 회원 정보 수정 서비스 로직 구현
-    public Member updateMember(Member member, long currentMemberId) {
+    public Member updateMember(Member member, long principalMemberId) {
+        // 회원이 존재하는지 먼저 봐야함
         Member findMember = findVerifiedMember(member.getMemberId());
 
         // 지금 로그인한 회원의 이메일이랑 수정하려고 하는 회원의 이메일이 일치 하는지 확인하는 메서드 필요
+        checkValidator.checkOwner(member.getMemberId(), principalMemberId);
 
         Optional.ofNullable(member.getName())
                 .ifPresent(name -> findMember.setName(name));
@@ -72,27 +77,47 @@ public class MemberService {
                 .ifPresent(email -> findMember.setEmail(email));
         Optional.ofNullable(member.getPhone())
                 .ifPresent(phone -> findMember.setPhone(phone));
-        Optional.ofNullable(member.getStatus())
-                .ifPresent(status -> findMember.setStatus(status));
 
         return memberRepository.save(findMember);
     }
 
     // 특정 회원 정보 찾는 서비스 로직 구현
-    public Member findMember(long memberId) {
+    public Member findMember(long memberId, long principalMemberId) {
+
+        // 본인 id가 맞는지, 관리자 인지 아닌지 검증하는 메서드
+        checkValidator.checkAdminAndCheckOwner(memberId, principalMemberId);
+
         return findVerifiedMember(memberId);
     }
 
     // 회원 전체 정보 조회 서비스 로직 구현
     public Page<Member> findMembers(int page, int size) {
-        return memberRepository.findAll(PageRequest.of(page, size, Sort.by("memberId").descending()));
+        // page는 0 이하면 안됨
+        if (page < 1) {
+            throw new IllegalArgumentException("페이지 번호는 1 이상이여야됨");
+        }
+
+        return memberRepository.findAll(PageRequest.of(page-1, size, Sort.by("memberId").descending()));
     }
 
     // 회원 삭제 서비스 로직 구현
-    public void deleteMember(long memberId) {
+    public void deleteMember(long memberId, long principalMemberId) {
+        // 회원 존재하는지 검증
         Member findMember = findVerifiedMember(memberId);
+        // 로그인한 회원이랑 맞는지 검증
+        checkValidator.checkOwner(memberId, principalMemberId);
+        // 관리자라면 관리자가 지울 수도 있어야하기에 관리자 인지 검증
+        checkValidator.checkAdmin();
 
-        memberRepository.delete(findMember);
+        // 근데 만약에 회원 상태가 이미 삭제된 상태라면? 그런 회원은 지울 수 없음
+        if (findMember.getStatus() == Member.Status.MEMBER_QUIT) {
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
+        }
+
+        // 회원 탈퇴 상태로만 변경하고 질문도 비활성화 상태로 바꿔야함
+        findMember.StatusChange();
+
+        memberRepository.save(findMember);
     }
 
     // 가입이 되어있는 회원인지를 검증
