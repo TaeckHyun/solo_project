@@ -15,6 +15,7 @@ import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -55,18 +56,12 @@ public class MemberController {
                                       @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
         memberPatchDto.setMemberId(memberId);
 
-        long loggedInMemberId = idAndEmailPrincipal.getMemberId();
-
-        if (loggedInMemberId != memberId) {
-            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_OWNER);
-        }
-
         Member member = memberMapper.memberPatchDtoToMember(memberPatchDto);
 
-        memberService.updateMember(member, memberId);
+        Member updateMember = memberService.updateMember(member, idAndEmailPrincipal.getMemberId());
 
         return new ResponseEntity(
-                new SingleResponseDto<>(memberMapper.memberTomemberResponseDto(member)),
+                new SingleResponseDto<>(memberMapper.memberTomemberResponseDto(updateMember)),
                 HttpStatus.OK);
     }
 
@@ -74,7 +69,7 @@ public class MemberController {
     public ResponseEntity getMember(@PathVariable("member-id") @Positive long memberId,
                                     @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
 
-        Member member = memberService.findMember(memberId);
+        Member member = memberService.findMember(memberId, idAndEmailPrincipal.getMemberId());
 
         return new ResponseEntity(
                 new SingleResponseDto<>(memberMapper.memberTomemberResponseDto(member)),
@@ -92,8 +87,9 @@ public class MemberController {
     }
 
     @DeleteMapping("/{member-id}")
-    public ResponseEntity deleteMember(@PathVariable("member-id") @Positive long memberId) {
-        memberService.deleteMember(memberId);
+    public ResponseEntity deleteMember(@PathVariable("member-id") @Positive long memberId,
+                                       @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
+        memberService.deleteMember(memberId, idAndEmailPrincipal.getMemberId());
 
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
