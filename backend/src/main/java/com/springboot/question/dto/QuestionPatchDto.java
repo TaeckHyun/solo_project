@@ -9,6 +9,8 @@ import javax.validation.constraints.NotBlank;
 public class QuestionPatchDto {
     private long questionId;
 
+    private long memberId;
+
     @NotBlank
     private String title;
 
@@ -17,5 +19,8 @@ public class QuestionPatchDto {
 
     public void setQuestionId(long questionId) {
         this.questionId = questionId;
+    }
+    public void setMemberId(long memberId) {
+        this.memberId = memberId;
     }
 }

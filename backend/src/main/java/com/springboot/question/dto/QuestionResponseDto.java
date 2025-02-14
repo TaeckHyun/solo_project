@@ -12,10 +12,10 @@ public class QuestionResponseDto {
     private long questionId;
     private String title;
     private String content;
+    private String name;
     private Question.QuestionStatus questionStatus;
     private Question.Visibility visibility;
     private int likeCount;
     private int viewCount;
-    private String name;
-    private AnswerResponseDto answerResponseDto;
+    private AnswerResponseDto answer;
 }
