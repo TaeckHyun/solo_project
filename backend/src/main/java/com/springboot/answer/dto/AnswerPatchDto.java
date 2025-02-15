@@ -10,4 +10,8 @@ public class AnswerPatchDto {
 
     @NotBlank
     private String content;
+
+    public void setAnswerId(long answerId) {
+        this.answerId = answerId;
+    }
 }

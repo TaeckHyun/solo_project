@@ -7,7 +7,6 @@ import lombok.Setter;
 import javax.validation.constraints.NotBlank;
 
 @Getter
-@Setter
 @NoArgsConstructor
 public class AnswerPostDto {
     @NotBlank
@@ -16,4 +15,12 @@ public class AnswerPostDto {
     private long questionId;
 
     private long memberId;
+
+    public void setQuestionId(long questionId) {
+        this.questionId = questionId;
+    }
+
+    public void setMemberId(long memberId) {
+        this.memberId = memberId;
+    }
 }
