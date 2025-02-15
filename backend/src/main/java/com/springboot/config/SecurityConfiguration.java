@@ -122,10 +122,6 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.POST, "/*/answers").hasRole("ADMIN")
                         // 답변 수정 권한 설정
                         .antMatchers(HttpMethod.PATCH, "/*/answers/**").hasRole("ADMIN")
-                        // 답변 질문 조회 권한 설정
-                        .antMatchers(HttpMethod.GET, "/*/answers").hasAnyRole("USER", "ADMIN")
-                        // 특정 답변 조회 권한 설정
-                        .antMatchers(HttpMethod.GET, "/*/answers/**").hasAnyRole("USER", "ADMIN")
                         // 답변 삭제 권한 설정
                         .antMatchers(HttpMethod.DELETE, "/*/answers/**").hasRole("ADMIN")
 
