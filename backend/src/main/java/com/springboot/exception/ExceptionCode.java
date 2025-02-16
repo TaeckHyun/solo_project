@@ -12,6 +12,7 @@ public enum ExceptionCode {
     LIKE_NOT_FOUND(404, "좋아요를 찾을 수 없습니다."),
     ALREADY_LIKE(409, "이미 좋아요를 눌렀음"),
     ANSWER_NOT_FOUND(404, "답변을 찾을 수 없습니다."),
+    ANSWER_EXISTS(409, "Answer exists"),
     UNAUTHORIZED_ACCESS(403, "관리자 권한이 없습니다.");
 //    COFFEE_NOT_FOUND(404, "Coffee not found"),
 //    COFFEE_CODE_EXISTS(409, "Coffee Code exists"),
