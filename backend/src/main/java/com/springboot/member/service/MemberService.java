@@ -90,7 +90,7 @@ public class MemberService {
     public Member findMember(long memberId, long principalMemberId) {
 
         // 본인 id가 맞는지, 관리자 인지 아닌지 검증하는 메서드
-        checkValidator.checkAdminAndCheckOwner(memberId, principalMemberId);
+        checkValidator.checkAdminOrOwner(memberId, principalMemberId);
 
         return findVerifiedMember(memberId);
     }
