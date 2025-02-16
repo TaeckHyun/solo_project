@@ -96,16 +96,16 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(authorize -> authorize // 람다식 사용해서 권한 설정 정의
                         // Member(회원) 관련 권한 설정
                         // 모든 사용자 접근 허용
-                        .antMatchers(HttpMethod.POST, "/*/members").permitAll()
+                        .antMatchers(HttpMethod.POST, "/v1/members").permitAll()
                         // 회원 정보 수정은 ROLE_USER 권한을 가진 사용자만 요청 가능
-                        .antMatchers(HttpMethod.PATCH, "/*/members/**").hasRole("USER")
+                        .antMatchers(HttpMethod.PATCH, "/v1/members/**").hasRole("USER")
                         // 전체 회원 목록 조회는 ROLE_ADMIN 권한을 가진 관리자만 접근 가능
-                        .antMatchers(HttpMethod.GET, "/*/members").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.GET, "/v1/members").hasRole("ADMIN")
                         // 특정 회원 정보 조회는 ROLE_USER 또는 ROLE_ADMIN 권한을 가진 사용자만 접근 가능
                         // hasAnyRole은 여러 Roles 중 하나만 있으면 됨
-                        .antMatchers(HttpMethod.GET, "/*/members/**").hasAnyRole("USER", "ADMIN")
+                        .antMatchers(HttpMethod.GET, "/v1/members/**").hasAnyRole("USER", "ADMIN")
                         // 회원 탈퇴는 ROLE_USER 권한을 가진 사용자만 접근 가능
-                        .antMatchers(HttpMethod.DELETE, "/*/members/**").hasRole("USER")
+                        .antMatchers(HttpMethod.DELETE, "/v1/members/**").hasRole("USER")
 
                         // 질문 생성 권한 설정
                         .antMatchers(HttpMethod.POST, "/*/questions").hasRole("USER")
@@ -119,16 +119,14 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.DELETE, "/*/questions/**").hasRole("USER")
 
                         // 답변 생성 권한 설정
-                        .antMatchers(HttpMethod.POST, "/*/answers").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.POST, "/v1/questions/**/answers").hasRole("ADMIN")
                         // 답변 수정 권한 설정
-                        .antMatchers(HttpMethod.PATCH, "/*/answers/**").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.PATCH, "/v1/questions/**/answers/**").hasRole("ADMIN")
                         // 답변 삭제 권한 설정
-                        .antMatchers(HttpMethod.DELETE, "/*/answers/**").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.DELETE, "/v1/questions/**/answers/**").hasRole("ADMIN")
 
-                        // 좋아요 생성 권한 설정
-                        .antMatchers(HttpMethod.POST, "/*/likes").hasAnyRole("USER", "ADMIN")
-                        // 좋아요 삭제 권한 설정
-                        .antMatchers(HttpMethod.DELETE, "/*/likes").hasAnyRole("USER", "ADMIN")
+                        // 좋아요 생성, 삭제 권한 설정
+                        .antMatchers(HttpMethod.POST, "/v1/questions/**/likes").hasAnyRole("USER", "ADMIN")
 
                         // 위에서 설정한 특정 패턴을 제외한 모든 요청 누구나 접근 가능
                         .anyRequest().permitAll()
