@@ -71,7 +71,7 @@ public class QuestionService {
 
         // 비밀글인 경우에는 작성자와 관리자만 접근 가능하도록 검증
         if (question.getVisibility() == Question.Visibility.QUESTION_SECRET) {
-            checkValidator.checkAdminAndCheckOwner(ownerId, principalId);
+            checkValidator.checkAdminOrOwner(ownerId, principalId);
         }
 
         // 이미 삭제된 질문은 조회할 수 없음

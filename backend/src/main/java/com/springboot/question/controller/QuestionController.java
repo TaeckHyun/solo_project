@@ -12,17 +12,21 @@ import com.springboot.question.dto.QuestionResponseDto;
 import com.springboot.question.entity.Question;
 import com.springboot.question.mapper.QuestionMapper;
 import com.springboot.question.repository.QuestionRepository;
+import com.springboot.question.service.FileStorageService;
 import com.springboot.question.service.QuestionService;
 import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
+import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 
@@ -36,26 +40,33 @@ public class QuestionController {
     private final QuestionMapper questionMapper;
     private final QuestionRepository questionRepository;
     private final MemberDetailsService memberDetailsService;
+    private final FileStorageService fileStorageService;
 
     public QuestionController(QuestionService questionService, LikeService likeService, QuestionMapper questionMapper,
                               QuestionRepository questionRepository,
-                              MemberDetailsService memberDetailsService) {
+                              MemberDetailsService memberDetailsService, FileStorageService fileStorageService) {
         this.questionService = questionService;
         this.likeService = likeService;
         this.questionMapper = questionMapper;
         this.questionRepository = questionRepository;
         this.memberDetailsService = memberDetailsService;
+        this.fileStorageService = fileStorageService;
     }
 
     // 질문 생성
-    @PostMapping
-    public ResponseEntity postQuestion(@RequestBody QuestionPostDto questionPostDto,
-                                       @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity postQuestion(@RequestPart("questionPostDto") @Valid QuestionPostDto questionPostDto,
+                                       @RequestPart(value = "file", required = false) MultipartFile file,
+                                       @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) throws IOException {
         // 질문을 생성하기 전에 로그인한 특정 사용자가 질문을 생성하는 거니까 questionPostDto 안에
         // 검증된 ID 넣어줘야됨
         questionPostDto.setMemberId(idAndEmailPrincipal.getMemberId());
 
+        String imageUrl = fileStorageService.uploadFile(file);
+
         Question question = questionMapper.questionPostDtoToQuestion(questionPostDto);
+
+        question.setImageUrl(imageUrl);
 
         Question createQuestion = questionService.createQuestion(question);
 
