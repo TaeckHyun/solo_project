@@ -50,7 +50,7 @@ public class Question {
     // 동기화, 영속성 전이
     public void setAnswer(Answer answer) {
         this.answer = answer;
-        if (answer.getQuestion() != this) {
+        if (answer != null) {
             answer.setQuestion(this);
         }
     }
@@ -62,8 +62,6 @@ public class Question {
             member.setQuestion(this);
         }
     }
-
-    // Question 엔티티 단에서 likeCount 증가 감소 메서드 만들어도될듯
 
     public enum QuestionStatus {
         QUESTION_REGISTERED("질문 등록"),
