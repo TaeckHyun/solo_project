@@ -4,6 +4,7 @@ import com.springboot.auth.utils.IdAndEmailPrincipal;
 import com.springboot.auth.utils.MemberDetailsService;
 import com.springboot.dto.MultiResponseDto;
 import com.springboot.dto.SingleResponseDto;
+import com.springboot.like.service.LikeService;
 import com.springboot.member.entity.Member;
 import com.springboot.question.dto.QuestionPatchDto;
 import com.springboot.question.dto.QuestionPostDto;
@@ -31,14 +32,16 @@ import java.util.List;
 public class QuestionController {
     private final static String QUESTION_DEFAULT_URL = "/v1/questions";
     private final QuestionService questionService;
+    private final LikeService likeService;
     private final QuestionMapper questionMapper;
     private final QuestionRepository questionRepository;
     private final MemberDetailsService memberDetailsService;
 
-    public QuestionController(QuestionService questionService, QuestionMapper questionMapper,
+    public QuestionController(QuestionService questionService, LikeService likeService, QuestionMapper questionMapper,
                               QuestionRepository questionRepository,
                               MemberDetailsService memberDetailsService) {
         this.questionService = questionService;
+        this.likeService = likeService;
         this.questionMapper = questionMapper;
         this.questionRepository = questionRepository;
         this.memberDetailsService = memberDetailsService;
@@ -109,4 +112,10 @@ public class QuestionController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @PostMapping("/{question-id}/like")
+    public ResponseEntity buttonLike(@PathVariable("question-id") long questionId,
+                                     @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
+        likeService.addOrMinusLike(questionId, idAndEmailPrincipal.getMemberId());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

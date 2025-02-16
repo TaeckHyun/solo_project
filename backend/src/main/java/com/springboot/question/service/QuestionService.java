@@ -130,15 +130,9 @@ public class QuestionService {
         }
     }
 
-    // 좋아요 숫자가 증가하는 메서드 필요
-    public void addLikeCount(Question question) {
-        question.setLikeCount(question.getLikeCount() + 1);
-        questionRepository.save(question);
-    }
-
-    // 좋아요 숫자가 감소하는 메서드 필요
-    public void removeLikeCount(Question question) {
-        question.setLikeCount(question.getLikeCount() - 1);
-        questionRepository.save(question);
+    // 답변 삭제 되면 질문의 답변 null로 돌리기
+    public void setAnswerOfQuestion(long questionId) {
+        Question question = findVerifiedQuestion(questionId);
+        question.setAnswer(null);
     }
 }
