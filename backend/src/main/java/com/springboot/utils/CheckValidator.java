@@ -3,33 +3,41 @@ package com.springboot.utils;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CheckValidator {
-    // 로그인한 사용자와 작성자 동일한지 검증 메서드
-    public boolean checkOwner(long ownerId, long principalOwnerId) {
+    // 로그인한 사용자와 작성자가 동일한지 검증
+    public void checkOwner(long ownerId, long principalOwnerId) {
         if (principalOwnerId != ownerId) {
             throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_OWNER);
         }
-        return true;
     }
 
-    // 어드민 검증 메서드
-    public boolean checkAdmin() {
-        // 인증된 객체를 불러옴
+    // 어드민 검증 (권한 없으면 즉시 예외 발생)
+    public void checkAdmin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        return authentication.getAuthorities().stream().anyMatch(
-                grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN")
-        );
+        if (authentication == null || authentication.getAuthorities().isEmpty()) {
+            throw new BusinessLogicException(ExceptionCode.ACCESS_DENIED);
+        }
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+
+        if (!isAdmin) {
+            throw new BusinessLogicException(ExceptionCode.UNAUTHORIZED_ACCESS);
+        }
     }
 
-    // 권리자 이거나 작성자 인지 검증하는 메서드
-    public void checkAdminAndCheckOwner(long ownerId, long principalOwnerId) {
-        if (!checkOwner(ownerId, principalOwnerId) && !checkAdmin()) {
-            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
-        }
+    // 관리자 또는 작성자인지 검증 (둘 중 하나라도 만족하면 통과)
+    public void checkAdminOrOwner(long ownerId, long principalOwnerId) {
+        if (principalOwnerId == ownerId) return; // 본인이면 통과
+
+        // 본인이 아니면 관리자 권한 확인
+        checkAdmin();
     }
 }
