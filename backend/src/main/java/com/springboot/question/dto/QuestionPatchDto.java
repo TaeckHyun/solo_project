@@ -1,5 +1,6 @@
 package com.springboot.question.dto;
 
+import com.springboot.question.entity.Question;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,6 +17,8 @@ public class QuestionPatchDto {
 
     @NotBlank
     private String content;
+
+    private Question.Visibility visibility;
 
     public void setQuestionId(long questionId) {
         this.questionId = questionId;
