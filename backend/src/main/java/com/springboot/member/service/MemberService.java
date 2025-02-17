@@ -98,7 +98,7 @@ public class MemberService {
     // 회원 전체 정보 조회 서비스 로직 구현
     public Page<Member> findMembers(int page, int size) {
         // page는 0 이하면 안됨
-        if (page < 1) {
+        if (page < 0) {
             throw new IllegalArgumentException("페이지 번호는 1 이상이여야됨");
         }
 
