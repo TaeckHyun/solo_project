@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -20,23 +21,32 @@ import java.util.Optional;
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
-    private final MemberRepository memberRepository;
+    private final StorageService storageService;
     private final MemberService memberService;
     private final CheckValidator checkValidator;
 
     public QuestionService(QuestionRepository questionRepository,
-                           MemberRepository memberRepository,
+                           StorageService storageService,
                            MemberService memberService,
                            CheckValidator checkValidator) {
         this.questionRepository = questionRepository;
-        this.memberRepository = memberRepository;
+        this.storageService = storageService;
         this.memberService = memberService;
         this.checkValidator = checkValidator;
     }
 
     // 질문 생성 서비스 로직 구현
-    public Question createQuestion(Question question) {
-        memberService.verifyExistsEmail(question.getMember().getEmail());
+    public Question createQuestion(Question question, MultipartFile questionImage) {
+        // 파일을 가져왔을때 그 파일이 null이거나 빈 파일 일때 검증해야함
+        if (questionImage != null && !questionImage.isEmpty()) {
+            question.setQuestionImage(questionImage.getOriginalFilename());
+            String fileName = question.getMember().getMemberId() + "_" + System.currentTimeMillis();
+            storageService.store(questionImage, fileName);
+            question.setQuestionImage(fileName);
+        } else {
+            question.setQuestionImage("C:\\solo_project\\backend\\src\\main\\resources\\questionImage\\noImage.png");
+        }
+        memberService.findVerifiedMember(question.getMember().getMemberId());
         return questionRepository.save(question);
     }
 

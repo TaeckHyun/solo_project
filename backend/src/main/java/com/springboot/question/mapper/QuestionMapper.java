@@ -22,7 +22,7 @@ public interface QuestionMapper {
                 .questionId(question.getQuestionId())
                 .title(question.getTitle())
                 .content(question.getContent())
-                .imageUrl(question.getImageUrl())
+                .questionImage(question.getQuestionImage())
                 .questionStatus(question.getQuestionStatus())
                 .visibility(question.getVisibility())
                 .likeCount(question.getLikeCount())

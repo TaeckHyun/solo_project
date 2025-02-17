@@ -48,7 +48,7 @@ public class Question {
     private int viewCount = 0;
 
     @Column
-    private String imageUrl;
+    private String questionImage;
 
     // 동기화, 영속성 전이
     public void setAnswer(Answer answer) {

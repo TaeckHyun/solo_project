@@ -12,7 +12,6 @@ import com.springboot.question.dto.QuestionResponseDto;
 import com.springboot.question.entity.Question;
 import com.springboot.question.mapper.QuestionMapper;
 import com.springboot.question.repository.QuestionRepository;
-import com.springboot.question.service.FileStorageService;
 import com.springboot.question.service.QuestionService;
 import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
@@ -40,35 +39,29 @@ public class QuestionController {
     private final QuestionMapper questionMapper;
     private final QuestionRepository questionRepository;
     private final MemberDetailsService memberDetailsService;
-    private final FileStorageService fileStorageService;
 
     public QuestionController(QuestionService questionService, LikeService likeService, QuestionMapper questionMapper,
                               QuestionRepository questionRepository,
-                              MemberDetailsService memberDetailsService, FileStorageService fileStorageService) {
+                              MemberDetailsService memberDetailsService) {
         this.questionService = questionService;
         this.likeService = likeService;
         this.questionMapper = questionMapper;
         this.questionRepository = questionRepository;
         this.memberDetailsService = memberDetailsService;
-        this.fileStorageService = fileStorageService;
     }
 
     // 질문 생성
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity postQuestion(@RequestPart("questionPostDto") @Valid QuestionPostDto questionPostDto,
-                                       @RequestPart(value = "file", required = false) MultipartFile file,
-                                       @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) throws IOException {
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity postQuestion(@RequestPart @Valid QuestionPostDto questionPostDto,
+                                       @RequestPart(required = false) MultipartFile questionImage,
+                                       @AuthenticationPrincipal IdAndEmailPrincipal idAndEmailPrincipal) {
         // 질문을 생성하기 전에 로그인한 특정 사용자가 질문을 생성하는 거니까 questionPostDto 안에
         // 검증된 ID 넣어줘야됨
         questionPostDto.setMemberId(idAndEmailPrincipal.getMemberId());
 
-        String imageUrl = fileStorageService.uploadFile(file);
-
         Question question = questionMapper.questionPostDtoToQuestion(questionPostDto);
 
-        question.setImageUrl(imageUrl);
-
-        Question createQuestion = questionService.createQuestion(question);
+        Question createQuestion = questionService.createQuestion(question, questionImage);
 
         URI location = UriCreator.createUri(QUESTION_DEFAULT_URL, createQuestion.getQuestionId());
 

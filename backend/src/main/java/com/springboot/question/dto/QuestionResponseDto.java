@@ -12,7 +12,7 @@ public class QuestionResponseDto {
     private long questionId;
     private String title;
     private String content;
-    private String imageUrl;
+    private String questionImage;
     private String name;
     private Question.QuestionStatus questionStatus;
     private Question.Visibility visibility;
