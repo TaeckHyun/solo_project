@@ -1,5 +1,6 @@
 package com.springboot.question.service;
 
+import com.springboot.answer.entity.Answer;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
 import com.springboot.member.entity.Member;
@@ -8,6 +9,7 @@ import com.springboot.member.service.MemberService;
 import com.springboot.question.entity.Question;
 import com.springboot.question.repository.QuestionRepository;
 import com.springboot.utils.CheckValidator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,15 +26,18 @@ public class QuestionService {
     private final StorageService storageService;
     private final MemberService memberService;
     private final CheckValidator checkValidator;
+    private final String defaultImagePath;
 
     public QuestionService(QuestionRepository questionRepository,
                            StorageService storageService,
                            MemberService memberService,
-                           CheckValidator checkValidator) {
+                           CheckValidator checkValidator,
+                           @Value("${file.default-image}") String defaultImagePath) {
         this.questionRepository = questionRepository;
         this.storageService = storageService;
         this.memberService = memberService;
         this.checkValidator = checkValidator;
+        this.defaultImagePath = defaultImagePath;
     }
 
     // 질문 생성 서비스 로직 구현
@@ -44,7 +49,14 @@ public class QuestionService {
             storageService.store(questionImage, fileName);
             question.setQuestionImage(fileName);
         } else {
-            question.setQuestionImage("C:\\solo_project\\backend\\src\\main\\resources\\questionImage\\noImage.png");
+            question.setQuestionImage(defaultImagePath);
+        }
+
+        // 질문이 SECRET 상태인 경우, 연결될 답변도 SECRET으로 설정해야 함
+        if (question.getVisibility() == Question.Visibility.QUESTION_SECRET) {
+            if (question.getAnswer() != null) {
+                question.getAnswer().setAnswerStatus(Answer.AnswerStatus.ANSWER_SECRET);
+            }
         }
         memberService.findVerifiedMember(question.getMember().getMemberId());
         return questionRepository.save(question);
@@ -52,24 +64,30 @@ public class QuestionService {
 
     // 질문 수정 서비스 로직 구현
     public Question updateQuestion(Question question, long principalId) {
-        Question findquestion = findVerifiedQuestion(question.getQuestionId());
+        Question findQuestion = findVerifiedQuestion(question.getQuestionId());
 
         // 일단 질문을 수정하려면 내가 쓴 글만 수정이되어야함 즉 작성자가 맞는지를 따져야 하는거 아닌가?
-        checkValidator.checkOwner(findquestion.getMember().getMemberId(), principalId);
+        checkValidator.checkOwner(findQuestion.getMember().getMemberId(), principalId);
 
         // 답변이 이미 달려서 질문 답변 완료 상태인데 이걸 수정할 수는 없음
-        if(findquestion.getQuestionStatus() == Question.QuestionStatus.QUESTION_ANSWERED) {
+        if(findQuestion.getQuestionStatus() == Question.QuestionStatus.QUESTION_ANSWERED) {
             throw new BusinessLogicException(ExceptionCode.QUESTION_ALREADY_ANSWERED);
         }
 
         Optional.ofNullable(question.getTitle())
-                .ifPresent(title -> findquestion.setTitle(title));
+                .ifPresent(title -> findQuestion.setTitle(title));
         Optional.ofNullable(question.getContent())
-                .ifPresent(content -> findquestion.setContent(content));
+                .ifPresent(content -> findQuestion.setContent(content));
         Optional.ofNullable(question.getVisibility())
-                .ifPresent(visibility -> findquestion.setVisibility(visibility));
+                .ifPresent(visibility -> {
+                    if (visibility == Question.Visibility.QUESTION_SECRET) {
+                        findQuestion.setVisibility(Question.Visibility.QUESTION_SECRET);
+                    } else {
+                        findQuestion.setVisibility(Question.Visibility.QUESTION_PUBLIC);
+                    }
+                });
 
-        return questionRepository.save(findquestion);
+        return questionRepository.save(findQuestion);
     }
 
     // 특정 질문 조회 서비스 로직 구현
@@ -94,15 +112,17 @@ public class QuestionService {
     }
 
     // 전체 질문 조회 서비스 로직 구현
-    public Page<Question> findQuestions(int page, int size) {
+    public Page<Question> findQuestions(int page, int size, String sortBy) {
         if (page < 1) {
             throw new IllegalArgumentException("페이지 번호 1이상이여야 하는데용");
         }
 
+        Sort sort = getSortBy(sortBy);
+
         return questionRepository.findByQuestionStatusNotIn(Arrays.asList(
                 Question.QuestionStatus.QUESTION_DELETED,
                 Question.QuestionStatus.QUESTION_DEACTIVED
-        ), PageRequest.of(page,size, Sort.by("questionId").descending()));
+        ), PageRequest.of(page-1, size, sort));
         // 비밀글인 상태 SECRET 이여도 가져오긴해야됨 보이긴해야지, 비밀글입니다 로 보여야지
     }
 
@@ -144,5 +164,25 @@ public class QuestionService {
     public void setAnswerOfQuestion(long questionId) {
         Question question = findVerifiedQuestion(questionId);
         question.setAnswer(null);
+    }
+
+    // 동적 정렬을 생성하는 메서드
+    private Sort getSortBy(String sortBy) {
+        switch (sortBy) {
+            case "latest": // 최신순 (기본값)
+                return Sort.by(Sort.Direction.DESC, "questionId");
+            case "oldest": // 오래된 순
+                return Sort.by(Sort.Direction.ASC, "questionId");
+            case "like_desc": // 좋아요 많은 순
+                return Sort.by(Sort.Direction.DESC, "likeCount");
+            case "like_asc": // 좋아요 적은 순
+                return Sort.by(Sort.Direction.ASC, "likeCount");
+            case "view_desc": // 조회수 많은 순
+                return Sort.by(Sort.Direction.DESC, "viewCount");
+            case "view_asc": // 조회수 적은 순
+                return Sort.by(Sort.Direction.ASC, "viewCount");
+            default:
+                throw new IllegalArgumentException("지원하지 않는 정렬 기준입니다.");
+        }
     }
 }
