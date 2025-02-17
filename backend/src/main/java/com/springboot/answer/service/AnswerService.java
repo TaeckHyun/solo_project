@@ -79,7 +79,6 @@ public class AnswerService {
         checkValidator.checkAdmin();
         // 먼저 답변이 존재하는지 검증 해야함
         Answer answer = findVerifiedAnswer(answerId);
-        // Null로 바꿔야하나? 그건 모르겠음
         questionService.setAnswerOfQuestion(answer.getQuestion().getQuestionId());
         answerRepository.deleteById(answerId);
     }
