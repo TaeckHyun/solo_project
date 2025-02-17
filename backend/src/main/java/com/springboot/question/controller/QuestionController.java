@@ -100,9 +100,10 @@ public class QuestionController {
     // 질문 전체 조회
     @GetMapping
     public ResponseEntity getQuestions(@RequestParam int page,
-                                       @RequestParam int size) {
+                                       @RequestParam int size,
+                                       @RequestParam(defaultValue = "latest") String sortBy) {
 
-        Page<Question> questionPage = questionService.findQuestions(page, size);
+        Page<Question> questionPage = questionService.findQuestions(page, size, sortBy);
         List<Question> questions = questionPage.getContent();
 
         return new ResponseEntity<>(new MultiResponseDto<>(questionMapper.questionsToQuestionResponseDtos(questions), questionPage), HttpStatus.OK);
