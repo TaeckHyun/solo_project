@@ -109,7 +109,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         // delegateRefreshToken() 메서드는 사용자 정보를 기반으로 RefreshToken 생성
         // 이것 또한 로그인한 사용자 정보를 기반으로 JWT 생성해서 refreshToken 변수에 저장
-        String refreshToken = delegateRefreshToken(member);
+        String refreshToken = delegateRefreshToken(member, accessToken);
 
         /*
            클라이언트가 API 요청 시 JWT를 인증 헤더에 포함하도록 응답에 추가
@@ -180,7 +180,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     }
 
     // Refresh Token 을 생성하는 메서드
-    private String delegateRefreshToken(Member member) {
+    private String delegateRefreshToken(Member member, String accessToken) {
         // Refresh Token의 주제(subject) 설정
         // 일반적으로 subject는 토큰을 발급받는 사용자의 고유 식별자(Ex. 이메일)로 설정됨
         String subject = member.getEmail();
@@ -194,7 +194,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String base64EncodedSecretKey = jwtTokenizer.encodeBase64SecretKey(jwtTokenizer.getSecretKey());
 
         // Refresh Token을 생성하는 메서드를 호출하여 Refresh Token을 생성함
-        String refreshToken = jwtTokenizer.generateRefreshToken(subject, expiration, base64EncodedSecretKey);
+        String refreshToken = jwtTokenizer.generateRefreshToken(subject, expiration, base64EncodedSecretKey, accessToken);
 
         // 완성된 Refresh Token 반환
         return refreshToken;

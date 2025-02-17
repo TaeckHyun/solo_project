@@ -6,6 +6,7 @@ import com.springboot.auth.utils.IdAndEmailPrincipal;
 import com.springboot.auth.utils.MemberDetailsService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -19,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /*
    Spring Security에서 JWT(JSON Web Token)를 검증하는 전용 필터
@@ -33,12 +35,14 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     private final JwtTokenizer jwtTokenizer;
     private final AuthorityUtils authorityUtils;
     private final MemberDetailsService memberDetailsService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public JwtVerificationFilter(JwtTokenizer jwtTokenizer,
-                                 AuthorityUtils authorityUtils, MemberDetailsService memberDetailsService) {
+                                 AuthorityUtils authorityUtils, MemberDetailsService memberDetailsService, RedisTemplate<String, Object> redisTemplate) {
         this.jwtTokenizer = jwtTokenizer;
         this.authorityUtils = authorityUtils;
         this.memberDetailsService = memberDetailsService;
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -56,6 +60,7 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
         */
         try {
             Map<String, Object> claims = verifyJws(request);
+            isTokenValidInRedis(claims);
             // 검증된 claims(JWT에 포함된 사용자 정보)를 Spring Security의 SecurityContext에 저장
             // 이후 컨트롤러에서 해당 유저가 인증된 상태로 요청을 처리할 수 있도록 함
             setAuthenticationToContext(claims);
@@ -126,5 +131,17 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
 
         // 현재 스레드의 SecurityContext에 인증 객체를 저장하여, 이후 요청에서도 인증된 사용자로 인식되게 함
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    // Redis에서 토큰을 검증하는 기능 추가
+    private void isTokenValidInRedis(Map<String, Object> claims) {
+        String username = Optional.ofNullable((String) claims.get("username"))
+                .orElseThrow(() -> new NullPointerException("Username is NULL"));
+
+        Boolean hasKey = redisTemplate.hasKey(username);
+
+        if (Boolean.FALSE.equals(hasKey)) {
+            throw new IllegalStateException("Redis Key Does Not Exist for username: " + username);
+        }
     }
 }

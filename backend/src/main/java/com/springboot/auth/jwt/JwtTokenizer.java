@@ -8,6 +8,8 @@ import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -15,9 +17,13 @@ import java.security.Key;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class JwtTokenizer {
+    private final RedisTemplate<String, Object> redisTemplate;
+
     @Getter
     @Value("${jwt.key}") // yml 파일 경로의 값이 필드로 들어감
     private String secretKey;
@@ -29,6 +35,10 @@ public class JwtTokenizer {
     @Getter
     @Value("${jwt.refresh-token-expiration-minutes}") // yml 파일 경로의 값이 필드로 들어감
     private int refreshTokenExpirationMinutes;
+
+    public JwtTokenizer(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
 
     /*
        주어진 Secret Key를 Base64로 인코딩하여 반환하는 메서드
@@ -50,7 +60,7 @@ public class JwtTokenizer {
         Key key = getKeyFromBase64EncodedKey(base64EncodedSecretKey);
 
         // 토큰 발행을 위해 Jwts.builder()를 사용해서 JWT를 생성하는 객체를 만듬
-        return Jwts.builder()
+        String accessToken = Jwts.builder()
                 .setClaims(claims) // claims에 들어있는 key-value 데이터를 JWT의 Payload에 추가
                 .setSubject(subject) // 받아온 subject를 설정하고 Payload에 추가
                 // Calendar.getInstance().getTime()은 현재 시스템의 날짜와 시간을 가지는 Calender 객체를 생성하고 현재 시간을 Date 객체로 변환해줌
@@ -58,6 +68,10 @@ public class JwtTokenizer {
                 .setExpiration(expiration) // JWT 만료 시간을 설정
                 .signWith(key) // signWith(key)를 이용해서 JWT에 서명을 추가
                 .compact(); // JWT를 문자열 형태로 변환하여 반환
+
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        valueOperations.set((String) claims.get("username"), accessToken, accessTokenExpirationMinutes, TimeUnit.MINUTES);
+        return accessToken;
     }
 
     /*
@@ -66,18 +80,22 @@ public class JwtTokenizer {
        AccessToken 보다 긴 유효시간을 가져야함, 그리고 서버는 RefreshToken을 검증해서 새로운 AccessToken을 발급할지 판단
     */
     // 여기서 expiration은 리프레시 토큰의 만료 시간
-    public String generateRefreshToken(String subject, Date expiration, String base64EncodedSecretKey) {
+    public String generateRefreshToken(String subject, Date expiration, String base64EncodedSecretKey, String accessToken) {
         // base64EncodedSecretKey를 디코딩하여 Key 객체로 변환
         // Key 객체는 JWT의 서명(Signature) 생성에 사용됨, JWT의 변조 방지를 위해 필수
         Key key = getKeyFromBase64EncodedKey(base64EncodedSecretKey);
 
         // JWT를 생성할 빌더 객체 만듬
-        return Jwts.builder()
+        String refreshToken = Jwts.builder()
                 .setSubject(subject) // 사용자의 고유 ID -> 여기서는 Email을 넣고 Payload에 추가
                 .setIssuedAt(Calendar.getInstance().getTime()) // JWT가 생성된 시간을 기록, 클라이언트가 토큰을 보낼 때, 서버에서 이 토큰이 유효한지 체크하는 데 사용
                 .setExpiration(expiration) // JWT 만료 시간 설정
                 .signWith(key) // JWT에 서명을 추가
                 .compact(); // JWT를 문자열 형태로 변환하여 반환
+
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        valueOperations.set(accessToken, refreshToken, accessTokenExpirationMinutes, TimeUnit.MINUTES);
+        return refreshToken;
     }
 
     /*
@@ -125,5 +143,17 @@ public class JwtTokenizer {
         Key key = Keys.hmacShaKeyFor(keyBytes); // 디코딩된 바이트 배열을 기반으로 HMAC SHA 암호화 키 생성
 
         return key;
+    }
+
+    // 로그아웃 진행 시 레디스에서 email을 기준으로 access, refresh토큰 삭제하는 메서드
+    public boolean deleteRegisterToken(String username) {
+        return Optional.ofNullable(redisTemplate.hasKey(username))
+                .filter(Boolean::booleanValue)
+                .map(hasKey -> {
+                    String accessToken = (String) redisTemplate.opsForValue().get(username);
+                    redisTemplate.delete(username);
+                    redisTemplate.delete(accessToken);
+                    return true;
+                }).orElse(false);
     }
 }
