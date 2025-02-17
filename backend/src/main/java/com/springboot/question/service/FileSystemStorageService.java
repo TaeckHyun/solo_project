@@ -2,6 +2,7 @@ package com.springboot.question.service;
 
 import com.springboot.exception.StorageException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -14,8 +15,12 @@ import java.util.Arrays;
 
 @Slf4j
 public class FileSystemStorageService implements StorageService{
-    private final Path rootLocation = Paths.get("C:\\solo_project\\backend\\src\\main\\resources\\fileImage");
+    private final Path rootLocation;
     private static final String[] ALLOWED_TYPES = {"jpg", "jpeg", "png", "gif"};
+
+    public FileSystemStorageService(@Value("${file.upload-dir}") String uploadDir) {
+        this.rootLocation = Paths.get(System.getProperty("user.dir"), uploadDir);
+    }
 
     @Override
     public String store(MultipartFile file, String fileName) {
