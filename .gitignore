@@ -6,3 +6,10 @@ backend/logs/
 backend/*.iml
 backend/.gradle/
 backend/build/
+
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.cache/
+frontend/.vscode/
+frontend/.idea/
