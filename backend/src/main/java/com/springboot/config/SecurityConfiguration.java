@@ -26,6 +26,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SecurityConfiguration {
@@ -163,8 +164,7 @@ public class SecurityConfiguration {
            Arrays.asList("*") 이건 모든 출처를 허용한다는 의미
            특정 도메인만 허용 하려면 asList안에 내용을 바꿔야함 ex. asList("https://example.com") 처럼 지정
         */
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // React 개발 서버
         /*
            setAllowedMethods 란?
            교차 출처 요청을 허용할 HTTP 메서드를 지정
@@ -172,6 +172,10 @@ public class SecurityConfiguration {
            이건 GET, POST, PATCH, DELETE 메서드를 허용한다는 것
         */
         configuration.setAllowedMethods(Arrays.asList("GET","POST","PATCH","DELETE"));
+        // 특정 헤더 허용
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowCredentials(true); // 쿠키 포함 요청 허용
+
 
         /* UrlBasedCorsConfigurationSource 란?
            특정 URL 패턴에 따라 다른 CORS 설정을 적용할 수 있도록 도와주는 객체
@@ -212,7 +216,7 @@ public class SecurityConfiguration {
             JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtTokenizer);
 
             // 로그인 요청을 처리하는 EndPoint를 "v11/auth/login"으로 설정
-            jwtAuthenticationFilter.setFilterProcessesUrl("/v11/auth/login");
+            jwtAuthenticationFilter.setFilterProcessesUrl("/v1/auth/login");
 
             // JWT 기반 인증 필터의 성공/실패 핸들러 및 검증 필터 설정
             jwtAuthenticationFilter.setAuthenticationSuccessHandler(new MemberAuthenticationSuccessHandler());
