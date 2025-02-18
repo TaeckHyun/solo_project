@@ -38,7 +38,7 @@ public class Question {
 
     // Answer와 Question은 1 : 1 관계
     // 질문이 사라지면 답변도 같이 사라짐
-    @OneToOne(mappedBy = "question", cascade = CascadeType.PERSIST)
+    @OneToOne(mappedBy = "question", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     private Answer answer;
 
     @Column(nullable = false)
