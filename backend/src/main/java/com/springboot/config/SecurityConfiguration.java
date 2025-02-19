@@ -174,6 +174,7 @@ public class SecurityConfiguration {
         configuration.setAllowedMethods(Arrays.asList("GET","POST","PATCH","DELETE"));
         // 특정 헤더 허용
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Refresh"));
         configuration.setAllowCredentials(true); // 쿠키 포함 요청 허용
 
 
